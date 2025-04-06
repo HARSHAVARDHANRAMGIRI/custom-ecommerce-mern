@@ -1,0 +1,100 @@
+// === Project Structure ===
+// custom-ecommerce-mern
+// ├── backend
+// │   ├── controllers
+// │   ├── models
+// │   ├── routes
+// │   ├── .env
+// │   ├── server.js
+// └── frontend
+//     ├── public
+//     ├── src
+//     │   ├── components
+//     │   ├── pages
+//     │   ├── App.js
+//     │   └── index.js
+
+// === BACKEND ===
+
+// backend/server.js
+import express from "express";
+import dotenv from "dotenv";
+import mongoose from "mongoose";
+import cors from "cors";
+
+import userRoutes from "./routes/userRoutes.js";
+import productRoutes from "./routes/productRoutes.js";
+import orderRoutes from "./routes/orderRoutes.js";
+
+dotenv.config();
+const app = express();
+app.use(cors());
+app.use(express.json());
+
+mongoose.connect(process.env.MONGO_URI)
+  .then(() => console.log("MongoDB Connected"))
+  .catch((err) => console.error(err));
+
+app.use("/api/users", userRoutes);
+app.use("/api/products", productRoutes);
+app.use("/api/orders", orderRoutes);
+
+app.get("/", (req, res) => res.send("API Running..."));
+
+const PORT = process.env.PORT || 5000;
+app.listen(PORT, () => console.log(`Server started on port ${PORT}`));
+
+// === FRONTEND ===
+
+// frontend/src/App.js
+import React from "react";
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import Home from "./pages/Home";
+import Product from "./pages/Product";
+import Cart from "./pages/Cart";
+import Login from "./pages/Login";
+import Register from "./pages/Register";
+
+function App() {
+  return (
+    <Router>
+      <Routes>
+        <Route path="/" element={<Home />} />
+        <Route path="/product/:id" element={<Product />} />
+        <Route path="/cart" element={<Cart />} />
+        <Route path="/login" element={<Login />} />
+        <Route path="/register" element={<Register />} />
+      </Routes>
+    </Router>
+  );
+}
+
+export default App;
+
+// Example: frontend/src/pages/Home.js
+import React, { useEffect, useState } from "react";
+import axios from "axios";
+
+function Home() {
+  const [products, setProducts] = useState([]);
+
+  useEffect(() => {
+    axios.get("http://localhost:5000/api/products").then((res) => {
+      setProducts(res.data);
+    });
+  }, []);
+
+  return (
+    <div>
+      <h1>Products</h1>
+      {products.map((p) => (
+        <div key={p._id}>
+          <h3>{p.name}</h3>
+          <p>{p.price}</p>
+        </div>
+      ))}
+    </div>
+  );
+}
+
+export default Home;
